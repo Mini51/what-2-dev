@@ -1,0 +1,9 @@
+{ 
+    "mongo": { 
+        "uri": "uri-here"
+    },
+
+    "server" : { 
+        "port": 3000
+    }
+}

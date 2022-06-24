@@ -1,0 +1,24 @@
+{
+  "name": "what-2-dev",
+  "version": "1.0.0",
+  "description": "A app where you can upload programming projects ideas that other people can make.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mini51/what-2-dev.git"
+  },
+  "author": "mini51",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mini51/what-2-dev/issues"
+  },
+  "homepage": "https://github.com/Mini51/what-2-dev#readme",
+  "dependencies": {
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "mongoose": "^6.4.0"
+  }
+}
