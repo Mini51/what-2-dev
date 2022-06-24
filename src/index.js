@@ -23,36 +23,56 @@ try {
 
 // home page 
 app.get('/', (req, res) => { 
-    res.send('home page of What2Dev'); 
+    res.render('index');
 });
 
 
 // random idea 
 app.get('/random', (req, res) => { 
     // get a random idea 
-    Ideas.findOne().then(idea => {
-        res.render('random',{
-            title: idea.title, 
-            description: idea.description,
-            createdAt: idea.createdAt
-        });
-    }).catch(err => {
-        console.log(err);
-        res.send('there was a error getting a random idea'); 
+    Ideas.countDocuments({}, (err, count) => {
+        if (err) {
+            console.log(err);
+            res.send('error');
+        } else {
+            const random = Math.floor(Math.random() * count);
+            Ideas.findOne().skip(random).exec((err, idea) => {
+                if (err) {
+                    console.log(err);
+                    res.send('error');
+                } else {
+                    res.render('random', { 
+                        title: idea.title, 
+                        description: idea.description,
+                        createdAt: idea.createdAt,
+                    });
+                }
+            });
+        }
     });
 });
+
 
 app.post('/post', (req, res) => {
     // create a new idea
     if(!req.body.title || !req.body.description) { 
-        return res.send('you need to provide a title and description'); 
+        return res.json({
+            status: 'error',
+            data: 'Title and description are required'
+        });
     }  
     // if there is more then 50 characters in the title, reject the idea 
     if(req.body.title.length > 50) {
-        return res.send('the title is too long');
+        return res.json({
+            status: 'error',
+            data: 'title must be less than 50 characters'
+        });
     }
     if(req.body.description.length > 3000) {
-        return res.send('the description is too long');
+        return res.json({
+            status: 'error',
+            data: 'description must be less than 3000 characters'
+        });
     }
     //REMOVE XSS ATTACKS 
     let cleanTitle = req.body.title.replace(/<script>/g, '');
@@ -67,11 +87,19 @@ app.post('/post', (req, res) => {
     
     idea.save().then(idea => {
         console.log(`✅:New idea created: ${cleanTitle}`);
-        res.redirect('/random');
+        res.json({
+            status: 'success',
+            data: idea.title
+        });
     }).catch(err => {
         console.log(err);
         res.send('there was a error creating a new idea');
     });
+});
+
+
+app.get('/post', (req, res) => { 
+    res.render('post');
 });
 
 app.listen(config.server.port, () => { 
