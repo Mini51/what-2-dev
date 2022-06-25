@@ -1,6 +1,6 @@
 { 
     "mongo": { 
-        "uri": "uri-here"
+        "uri": "mongodb+srv://NASA:dVLPlaW19zTMSbAX@cluster0.srkqb.mongodb.net/?retryWrites=true&w=majority"
     },
 
     "server" : { 
