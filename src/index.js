@@ -3,13 +3,14 @@ const mongoose = require('mongoose');
 const path = require('path');
 const config = require('./config.json');
 const Ideas = require('./models/ideas');
+ 
 
 //setup app 
 const app = express();
 app.use(express.json());
 app.set('view engine', 'ejs'); 
 app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'public'))); 
+
 
 // connect to mongoDB 
 try { 
@@ -55,23 +56,22 @@ app.get('/random', (req, res) => {
 
 app.post('/post', (req, res) => {
     // create a new idea
+    console.log(req.body);
+    
     if(!req.body.title || !req.body.description) { 
-        return res.json({
-            status: 'error',
-            data: 'Title and description are required'
-        });
+        return res.status(400).json({ 
+            message: 'Please enter a title and description'
+        }); 
     }  
     // if there is more then 50 characters in the title, reject the idea 
-    if(req.body.title.length > 50) {
-        return res.json({
-            status: 'error',
-            data: 'title must be less than 50 characters'
+    if(req.body.title.length > 75) {
+        return res.status(400).json({
+            message: 'Title must be less than 75 characters'
         });
     }
-    if(req.body.description.length > 3000) {
-        return res.json({
-            status: 'error',
-            data: 'description must be less than 3000 characters'
+    if(req.body.description.length > 300) {
+        return res.status(400).json({
+            message: 'Description must be less than 300 characters'
         });
     }
     //REMOVE XSS ATTACKS 
@@ -87,13 +87,14 @@ app.post('/post', (req, res) => {
     
     idea.save().then(idea => {
         console.log(`✅:New idea created: ${cleanTitle}`);
-        res.json({
-            status: 'success',
-            data: idea.title
+        res.status(201).json({ 
+            message: 'New idea created', 
         });
     }).catch(err => {
         console.log(err);
-        res.send('there was a error creating a new idea');
+        res.status(400).json({ 
+            message: 'Error creating idea'
+        });
     });
 });
 
