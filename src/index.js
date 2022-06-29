@@ -3,14 +3,15 @@ const mongoose = require('mongoose');
 const path = require('path');
 const config = require('./config.json');
 const Ideas = require('./models/ideas');
- 
+
+const staticPath = path.join(__dirname, 'static');
 
 //setup app 
 const app = express();
 app.use(express.json());
 app.set('view engine', 'ejs'); 
 app.set('views', path.join(__dirname, 'views'));
-
+app.use(express.static(staticPath));
 
 // connect to mongoDB 
 try { 
@@ -24,8 +25,14 @@ try {
 
 // home page 
 app.get('/', (req, res) => { 
-    res.render('index');
+    // send file from ./static/index.html
+    res.sendFile(path.join(staticPath, 'index.html'));
 });
+
+
+app.get('/about', (req, res) => {
+    res.sendFile(path.join(staticPath, 'about.html'));
+}); 
 
 
 // random idea 
