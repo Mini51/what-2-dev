@@ -1,43 +1,38 @@
-const express = require('express'); 
-const mongoose = require('mongoose'); 
+const express = require('express');
+const mongoose = require('mongoose');
 const path = require('path');
 const config = require('./config.json');
+const filterdWoerds = require('./filterdWords');
 const Ideas = require('./models/ideas');
-
 const staticPath = path.join(__dirname, 'static');
 
-//setup app 
+// setup app
 const app = express();
 app.use(express.json());
-app.set('view engine', 'ejs'); 
+app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(staticPath));
 
-// connect to mongoDB 
-try { 
-    mongoose.connect(config.mongo.uri, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('✅:Connected to MongoDB'); 
-} catch(err) {
+try {
+    mongoose.connect(config.mongo.uri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    });
+    console.log('✅:Connected to MongoDB');
+} catch (err) {
     console.log('❌:Error connecting to MongoDB');
     console.log(err);
 }
 
-
-// home page 
-app.get('/', (req, res) => { 
-    // send file from ./static/index.html
+app.get('/', (req, res) => {
     res.sendFile(path.join(staticPath, 'index.html'));
 });
 
-
 app.get('/about', (req, res) => {
     res.sendFile(path.join(staticPath, 'about.html'));
-}); 
+});
 
-
-// random idea 
-app.get('/random', (req, res) => { 
-    // get a random idea 
+app.get('/random', (req, res) => {
     Ideas.countDocuments({}, (err, count) => {
         if (err) {
             console.log(err);
@@ -49,10 +44,10 @@ app.get('/random', (req, res) => {
                     console.log(err);
                     res.send('error');
                 } else {
-                    res.render('random', { 
-                        title: idea.title, 
+                    res.render('random', {
+                        title: idea.title,
                         description: idea.description,
-                        createdAt: idea.createdAt,
+                        createdAt: idea.createdAt
                     });
                 }
             });
@@ -60,57 +55,44 @@ app.get('/random', (req, res) => {
     });
 });
 
-
 app.post('/post', (req, res) => {
-    // create a new idea
-    console.log(req.body);
-    
-    if(!req.body.title || !req.body.description) { 
-        return res.status(400).json({ 
-            message: 'Please enter a title and description'
-        }); 
-    }  
-    // if there is more then 50 characters in the title, reject the idea 
-    if(req.body.title.length > 75) {
-        return res.status(400).json({
-            message: 'Title must be less than 75 characters'
-        });
+    if (!req.body.title || !req.body.description) {
+        return res.status(400).json({message: 'Please enter a title and description'});
     }
-    if(req.body.description.length > 300) {
-        return res.status(400).json({
-            message: 'Description must be less than 300 characters'
-        });
+    if (req.body.title.length > 75) {
+        return res.status(400).json({message: 'Title must be less than 75 characters'});
     }
-    //REMOVE XSS ATTACKS 
+    if (req.body.description.length > 300) {
+        return res.status(400).json({message: 'Description must be less than 300 characters'});
+    }
+    if (req.body.title.length < 3) {
+        return res.status(400).json({message: 'Title must be at least 3 characters'});
+    }
+    if (filterdWoerds.some(word => req.body.title.includes(word)) || filterdWoerds.some(word => req.body.description.includes(word))) {
+        return res.status(400).json({message: 'The title or description contains a filterd word'});
+    }
+
     let cleanTitle = req.body.title.replace(/<script>/g, '');
     let cleanDescription = req.body.description.replace(/<script>/g, '');
 
 
-    const idea = new Ideas({
-        title: cleanTitle,
-        description: cleanDescription,
-        createdAt: Date.now()
-    });
-    
+    const idea = new Ideas({title: cleanTitle, description: cleanDescription, createdAt: Date.now()});
+
     idea.save().then(idea => {
         console.log(`✅:New idea created: ${cleanTitle}`);
-        res.status(201).json({ 
-            message: 'New idea created', 
-        });
+        res.status(201).json({message: 'New idea created'});
     }).catch(err => {
         console.log(err);
-        res.status(400).json({ 
-            message: 'Error creating idea'
-        });
+        res.status(400).json({message: 'Error creating idea'});
     });
 });
 
-
-app.get('/post', (req, res) => { 
+app.get('/post', (req, res) => {
     res.render('post');
 });
 
-app.listen(config.server.port, () => { 
-    console.log(`🚀:Server is listening on port ${config.server.port}`); 
+app.listen(config.server.port, () => {
+    console.log(`🚀:Server is listening on port ${
+        config.server.port
+    }`);
 });
-
